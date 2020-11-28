@@ -11,6 +11,7 @@ bot = commands.Bot(command_prefix='j!')
 
 @bot.command(name='ping')
 async def pong(ctx):
+    print(ctx.author.id)
     await ctx.send('Pong!')
 
 @bot.event
