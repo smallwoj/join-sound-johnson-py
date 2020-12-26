@@ -64,7 +64,7 @@ async def on_voice_state_update(user: discord.Member, before: discord.VoiceState
     if not before.channel and after.channel:
         if db.has_sound(user.id):
             path = db.get_sound(user.id)
-            source = await discord.FFmpegOpusAudio.from_probe(path)
+            source = discord.FFmpegPCMAudio(path)
             if user.guild in map(lambda x: x.guild, bot.voice_clients):
                 voice_connection = list(filter(lambda x: x.guild == user.guild, bot.voice_clients))[0]
                 if after.channel != voice_connection.channel:
@@ -74,6 +74,7 @@ async def on_voice_state_update(user: discord.Member, before: discord.VoiceState
                 voice_connection = await after.channel.connect(reconnect=False)
             if voice_connection.is_playing():
                 voice_connection.stop()
+            source = discord.PCMVolumeTransformer(source, volume=0.01)
             voice_connection.play(source)
             while voice_connection.is_playing():
                 await asyncio.sleep(1)
