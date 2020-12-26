@@ -1,6 +1,6 @@
 import asyncio
 import os
-
+import logging
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -8,6 +8,7 @@ from pytube import YouTube
 from pytube.exceptions import RegexMatchError
 from db import Database
 
+logging.basicConfig(filename='bot.log', format='[%(levelname)s] (%(asctime)s): %(message)s', level=logging.DEBUG)
 db = Database()
 
 load_dotenv()
@@ -34,13 +35,16 @@ async def set_sound(ctx: commands.context.Context, link: str):
             await msg.edit(content="❌ That video is too long! Videos should be less than 5 seconds in length.")
     except (RegexMatchError, KeyError):
         await msg.edit(content='❌ Not a valid YouTube link!')
-    except Exception:
+    except Exception as e:
+        logging.error('Error while setting sound: ' + e)
         await msg.edit(content='❌ Some unknown error occurred!')
 
 @set_sound.error
 async def missing_param(ctx: commands.context.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('❌ Missing YouTube link!')
+    else:
+        logging.error('Error while setting sound: ' + error)
 
 @bot.command(name='remove', help='Removes your join sound from the records.')
 async def remove_sound(ctx: commands.context.Context):
@@ -54,9 +58,14 @@ async def remove_sound(ctx: commands.context.Context):
     else:
         await ctx.send('❌ No join sound to remove!')
 
+@remove_sound.error
+async def remove_error(ctx: commands.context.Context, error):
+    logging.error('Error while removing: ' + error)
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    logging.info(f'{bot.user} has connected to Discord!')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='j!help'))
 
 @bot.event
@@ -68,38 +77,41 @@ async def on_voice_state_update(user: discord.Member, before: discord.VoiceState
     :param before: The user's voice state before the change.
     :param after: The user's voice state after the change
     """
-    # Since this event fires multiple times, ensure that there is not a channel before, and a channel after
-    if not before.channel and after.channel:
-        # Check if this user has a sound in the database
-        if db.has_sound(user.id):
-            path = db.get_sound(user.id)
-            # Create an audio source for the sound
-            source = discord.FFmpegPCMAudio(path)
-            # Check if the bot is already connected to a voice channel in the server
-            if user.guild in map(lambda x: x.guild, bot.voice_clients):
-                # If the bot is connected to a different channel than the one the user just connected to, disconnect
-                voice_connection = list(filter(lambda x: x.guild == user.guild, bot.voice_clients))[0]
-                if after.channel != voice_connection.channel:
-                    await voice_connection.disconnect()
-                    voice_connection = await after.channel.connect(reconnect=False)
-            else:
-                voice_connection = await after.channel.connect(reconnect=False)
-            # Interrupt the current sound if there is one playing
-            if voice_connection.is_playing():
-                voice_connection.stop()
-            # Reduce the volume
-            source = discord.PCMVolumeTransformer(source, volume=0.01)
-            # Play it
-            voice_connection.play(source)
-
-            # Auto disconnect after a little bit
-            while voice_connection.is_playing():
-                await asyncio.sleep(1)
-            else:
-                await asyncio.sleep(10)
-                while voice_connection.is_playing():
-                    break
+    try:
+        # Since this event fires multiple times, ensure that there is not a channel before, and a channel after
+        if not before.channel and after.channel:
+            # Check if this user has a sound in the database
+            if db.has_sound(user.id):
+                path = db.get_sound(user.id)
+                # Create an audio source for the sound
+                source = discord.FFmpegPCMAudio(path)
+                # Check if the bot is already connected to a voice channel in the server
+                if user.guild in map(lambda x: x.guild, bot.voice_clients):
+                    # If the bot is connected to a different channel than the one the user just connected to, disconnect
+                    voice_connection = list(filter(lambda x: x.guild == user.guild, bot.voice_clients))[0]
+                    if after.channel != voice_connection.channel:
+                        await voice_connection.disconnect()
+                        voice_connection = await after.channel.connect(reconnect=False)
                 else:
-                    await voice_connection.disconnect()
+                    voice_connection = await after.channel.connect(reconnect=False)
+                # Interrupt the current sound if there is one playing
+                if voice_connection.is_playing():
+                    voice_connection.stop()
+                # Reduce the volume
+                source = discord.PCMVolumeTransformer(source, volume=0.01)
+                # Play it
+                voice_connection.play(source)
+
+                # Auto disconnect after a little bit
+                while voice_connection.is_playing():
+                    await asyncio.sleep(1)
+                else:
+                    await asyncio.sleep(10)
+                    while voice_connection.is_playing():
+                        break
+                    else:
+                        await voice_connection.disconnect()
+    except Exception as e:
+        logging.error('Error while playing sound: ' + e)
 
 bot.run(TOKEN)
