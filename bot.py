@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='j!', intents=intents)
 
 @bot.command(name='ping', help='Gives the latency of the bot.')
 async def pong(ctx: commands.context.Context):
-    await ctx.send(f'Pong! ({bot.latency} ms)')
+    await ctx.send(f'Pong! (Took {bot.latency})')
 
 @bot.command(name='set', help='Set your join sound to the given YouTube link.')
 async def set_sound(ctx: commands.context.Context, link: str):
