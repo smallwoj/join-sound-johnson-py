@@ -27,8 +27,8 @@ async def set_sound(ctx: commands.context.Context, link: str):
     msg = await ctx.send('🔃 Please wait...')
     try:
         yt = YouTube(link)
-        sound = yt.streams.filter(type='audio').first()
-        if sound.filesize < 100000:
+        if yt.length <= 5:
+            sound = yt.streams.filter(type='audio').first()
             db.upload_sound(ctx.author.id, sound)
             await msg.edit(content="✅ Successful!")
         else:
