@@ -35,6 +35,13 @@ async def set_sound(ctx: commands.context.Context, link: str):
             await msg.edit(content="❌ That video is too long! Videos should be less than 5 seconds in length.")
     except (RegexMatchError, KeyError):
         await msg.edit(content='❌ Not a valid YouTube link!')
+    except Exception:
+        await msg.edit(content='❌ Some unknown error occurred!')
+
+@set_sound.error
+async def missing_param(ctx: commands.context.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('❌ Missing YouTube link!')
 
 @bot.command(name='remove', help='Removes your join sound from the records.')
 async def remove_sound(ctx: commands.context.Context):
