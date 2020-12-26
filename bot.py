@@ -31,6 +31,12 @@ async def set_sound(ctx: commands.context.Context, link: str):
     else:
         await ctx.send("too big")
 
+@bot.command(name='remove')
+async def remove_sound(ctx: commands.context.Context):
+    if db.has_sound(ctx.author.id):
+        db.remove_sound(ctx.author.id)
+        await ctx.send('Removed!')
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')

@@ -68,3 +68,11 @@ class Database:
             cursor.execute(query, val)
         cursor.close()
         self.db.commit()
+    
+    def remove_sound(self, discord_id: str):
+        path = self.get_sound(discord_id)
+        os.remove(path)
+        cursor = self.db.cursor()
+        query = f"DELETE FROM join_sounds WHERE discord_id='{discord_id}'"
+        cursor.execute(query)
+        cursor.close()
