@@ -6,6 +6,7 @@ from discord import voice_client
 from dotenv import load_dotenv
 from discord.ext import commands
 from pytube import YouTube
+from pytube.exceptions import RegexMatchError
 from db import Database
 
 db = Database()
@@ -17,25 +18,35 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix='j!', intents=intents)
 
-@bot.command(name='ping')
+@bot.command(name='ping', help='Gives the latency of the bot.')
 async def pong(ctx: commands.context.Context):
-    await ctx.send(f'Pong! ({bot.latency})')
+    await ctx.send(f'Pong! ({bot.latency} ms)')
 
-@bot.command(name='set')
+@bot.command(name='set', help='Set your join sound to the given YouTube link.')
 async def set_sound(ctx: commands.context.Context, link: str):
-    yt = YouTube(link)
-    sound = yt.streams.filter(type='audio').first()
-    if sound.filesize < 100000:
-        db.upload_sound(ctx.author.id, sound)
-        await ctx.send("Successful!")
-    else:
-        await ctx.send("too big")
+    msg = await ctx.send('🔃 Please wait...')
+    try:
+        yt = YouTube(link)
+        sound = yt.streams.filter(type='audio').first()
+        if sound.filesize < 100000:
+            db.upload_sound(ctx.author.id, sound)
+            await msg.edit(content="✅ Successful!")
+        else:
+            await msg.edit(content="❌ That video is too long! Videos should be less than 5 seconds in length.")
+    except (RegexMatchError, KeyError):
+        await msg.edit(content='❌ Not a valid YouTube link!')
 
-@bot.command(name='remove')
+@bot.command(name='remove', help='Removes your join sound from the records.')
 async def remove_sound(ctx: commands.context.Context):
     if db.has_sound(ctx.author.id):
-        db.remove_sound(ctx.author.id)
-        await ctx.send('Removed!')
+        msg = await ctx.send('🔃 Please wait...')
+        try:
+            db.remove_sound(ctx.author.id)
+            await msg.edit(content='✅ Removed!')
+        except Exception:
+            await msg.edit(content='❌ Some unknown error occurred!')
+    else:
+        await ctx.send('❌ No join sound to remove!')
 
 @bot.event
 async def on_ready():
