@@ -2,7 +2,6 @@ import asyncio
 import os
 
 import discord
-from discord import voice_client
 from dotenv import load_dotenv
 from discord.ext import commands
 from pytube import YouTube
@@ -62,21 +61,38 @@ async def on_ready():
 
 @bot.event
 async def on_voice_state_update(user: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    """
+    The meat of the bot, whenever a user connects to a voice channel, connect and play their sound.
+
+    :param user: The user that joined the channel
+    :param before: The user's voice state before the change.
+    :param after: The user's voice state after the change
+    """
+    # Since this event fires multiple times, ensure that there is not a channel before, and a channel after
     if not before.channel and after.channel:
+        # Check if this user has a sound in the database
         if db.has_sound(user.id):
             path = db.get_sound(user.id)
+            # Create an audio source for the sound
             source = discord.FFmpegPCMAudio(path)
+            # Check if the bot is already connected to a voice channel in the server
             if user.guild in map(lambda x: x.guild, bot.voice_clients):
+                # If the bot is connected to a different channel than the one the user just connected to, disconnect
                 voice_connection = list(filter(lambda x: x.guild == user.guild, bot.voice_clients))[0]
                 if after.channel != voice_connection.channel:
                     await voice_connection.disconnect()
                     voice_connection = await after.channel.connect(reconnect=False)
             else:
                 voice_connection = await after.channel.connect(reconnect=False)
+            # Interrupt the current sound if there is one playing
             if voice_connection.is_playing():
                 voice_connection.stop()
+            # Reduce the volume
             source = discord.PCMVolumeTransformer(source, volume=0.01)
+            # Play it
             voice_connection.play(source)
+
+            # Auto disconnect after a little bit
             while voice_connection.is_playing():
                 await asyncio.sleep(1)
             else:
