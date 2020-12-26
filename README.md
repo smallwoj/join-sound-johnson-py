@@ -20,5 +20,5 @@ Type j!help command for more info on a command.
 3. Create a file called `.env` with the following:
 
         DISCORD_TOKEN=<TOKEN>
-    Where `<token>` is the Discord Bot Token for your custom app.
+    Where `<TOKEN>` is the Discord Bot Token for your custom app.
 4. Run `python bot.py`
