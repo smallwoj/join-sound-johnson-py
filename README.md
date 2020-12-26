@@ -1,5 +1,5 @@
 # Join Sound Johnson
-![img](./icon.svg)
+<img src="./icon.svg" width="10%">
 
 # About
 Join Sound Johnson is a Discord bot that allows you to set a YouTube link to a video that plays when you connect to a voice channel!
