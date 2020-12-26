@@ -6,6 +6,7 @@ class Database:
         """
         Initializes the database.
         """
+        self.db = None
         cursor = self.cursor()
 
         # Create the join_sounds database table if not present
@@ -29,7 +30,7 @@ class Database:
                 password='123456',
                 database='joinbot'
             )
-        return self.cursor()
+        return self.db.cursor()
 
     def create_table(self):
         """
