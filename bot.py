@@ -27,12 +27,12 @@ async def set_sound(ctx: commands.context.Context, link: str):
     msg = await ctx.send('🔃 Please wait...')
     try:
         yt = YouTube(link)
-        if yt.length <= 10:
+        if yt.length <= 16:
             sound = yt.streams.filter(type='audio').first()
             db.upload_sound(ctx.author.id, sound)
             await msg.edit(content="✅ Successful!")
         else:
-            await msg.edit(content="❌ That video is too long! Videos should be less than 10 seconds in length.")
+            await msg.edit(content="❌ That video is too long! Videos should be less than 15 seconds in length.")
     except (RegexMatchError, KeyError):
         await msg.edit(content='❌ Not a valid YouTube link!')
     except Exception as e:
