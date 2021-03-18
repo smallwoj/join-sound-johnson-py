@@ -44,7 +44,7 @@ async def missing_param(ctx: commands.context.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('❌ Missing YouTube link!')
     else:
-        logging.error('Error while setting sound: ' + error)
+        logging.error('Error while setting sound: ' + str(error))
 
 @bot.command(name='remove', help='Removes your join sound from the records.')
 async def remove_sound(ctx: commands.context.Context):
@@ -98,7 +98,7 @@ async def on_voice_state_update(user: discord.Member, before: discord.VoiceState
                 if voice_connection.is_playing():
                     voice_connection.stop()
                 # Reduce the volume
-                source = discord.PCMVolumeTransformer(source, volume=0.01)
+                source = discord.PCMVolumeTransformer(source, volume=0.1)
                 # Play it
                 voice_connection.play(source)
 
@@ -112,6 +112,6 @@ async def on_voice_state_update(user: discord.Member, before: discord.VoiceState
                     else:
                         await voice_connection.disconnect()
     except Exception as e:
-        logging.error('Error while playing sound: ' + e)
+        logging.error('Error while playing sound: ' + str(e))
 
 bot.run(TOKEN)
