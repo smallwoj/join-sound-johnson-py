@@ -8,7 +8,7 @@ from pytube import YouTube
 from pytube.exceptions import RegexMatchError
 from db import Database
 
-logging.basicConfig(filename='bot.log', format='[%(levelname)s] (%(asctime)s): %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='[%(levelname)s] (%(asctime)s): %(message)s', level=logging.DEBUG, handlers=[logging.FileHandler('bot.log', 'w', 'utf-8')])
 db = Database()
 
 load_dotenv()
