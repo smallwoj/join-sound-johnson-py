@@ -36,7 +36,7 @@ async def set_sound(ctx: commands.context.Context, link: str):
     except (RegexMatchError, KeyError):
         await msg.edit(content='❌ Not a valid YouTube link!')
     except Exception as e:
-        logging.error('Error while setting sound: ' + e)
+        logging.error('Error while setting sound: ' + str(e))
         await msg.edit(content='❌ Some unknown error occurred!')
 
 @set_sound.error
