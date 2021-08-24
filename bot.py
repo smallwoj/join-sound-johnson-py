@@ -29,7 +29,7 @@ async def set_sound(ctx: commands.context.Context, link: str):
         yt = YouTube(link)
         if yt.length <= 16:
             sound = yt.streams.filter(type='audio').first()
-            db.upload_sound(ctx.author.id, sound)
+            db.upload_sound(ctx.author.id, sound, yt.watch_url)
             await msg.edit(content="✅ Successful!")
         else:
             await msg.edit(content="❌ That video is too long! Videos should be less than 15 seconds in length.")

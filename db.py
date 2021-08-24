@@ -43,6 +43,7 @@ class Database:
                 'id INT AUTO_INCREMENT PRIMARY KEY',
                 'discord_id VARCHAR(255) UNIQUE',
                 'file_path VARCHAR(255)',
+                'url VARCHAR(1024)',
             ]) + ')'
         )
         cursor.execute('CREATE INDEX discord_idx ON join_sounds (discord_id)')
@@ -84,27 +85,28 @@ class Database:
         else:
             raise Exception("No join sound found!")
 
-    def upload_sound(self, discord_id: str, sound: Stream):
+    def upload_sound(self, discord_id: str, sound: Stream, url: str):
         """
         Saves the sound to file and creates/updates a record in the database
 
         :param discord_id: The id of the user that uploaded this sound.
         :param sound: The stream of the sound to upload.
+        :param url: Youtube url of the sound that is uploading.
         """
         # Get the file path & name
         path = os.path.join('media', f'{discord_id}')
-        file_name = 'joinsound'
+        file_name = 'joinsound.mp4'
         # Save the sound to file
         sound.download(path, file_name)
         full_path = sound.get_file_path(output_path=path, filename=file_name)
         cursor = self.cursor()
         # If the user has a sound already
         if self.has_sound(discord_id):
-            query = f"UPDATE join_sounds SET file_path='{full_path}' WHERE discord_id='{discord_id}'"
+            query = f"UPDATE join_sounds SET file_path='{full_path}', url='{url}' WHERE discord_id='{discord_id}'"
             cursor.execute(query)
         else:
-            query = f"INSERT INTO join_sounds (discord_id, file_path) VALUES (%s, %s)"
-            val = (discord_id, full_path)
+            query = f"INSERT INTO join_sounds (discord_id, file_path, url) VALUES (%s, %s, %s)"
+            val = (discord_id, full_path, url)
             cursor.execute(query, val)
         cursor.close()
         self.db.commit()
